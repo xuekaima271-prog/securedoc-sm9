@@ -1,0 +1,22 @@
+{
+  "name": "securedoc-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "企业级端到端加密文档投递系统 — 前端（Vue3 + Vite，浏览器内 SM9/SM4/SM3 真加密）",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 5173",
+    "test": "node --test tests/*.test.mjs",
+    "e2e": "node e2e/closed-loop.mjs"
+  },
+  "dependencies": {
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.0.7"
+  }
+}
