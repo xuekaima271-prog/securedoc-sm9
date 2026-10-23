@@ -1,0 +1,37 @@
+# =============================================================================
+# KGC 服务基础配置（公共部分）—— 独立可信密钥中心（设计文档 §2.6 / §18 端口规划 :8081）
+# Profile: dev=H2 零安装(默认)，prod=本机 MySQL（与应用服务器共享 securedoc 库）
+# =============================================================================
+server:
+  port: 8081
+  address: 127.0.0.1           # KGC 默认不暴露到局域网
+
+spring:
+  application:
+    name: securedoc-kgc-service
+  profiles:
+    active: dev               # 默认开发档：H2，无需安装任何数据库
+
+# MyBatis-Plus 配置（与 backend-app 同约定）
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true   # 下划线列名 -> 驼峰字段
+  global-config:
+    db-config:
+      id-type: input          # KGC 主表 kgc_private_key_issues 用 UUID（@TableId(type=INPUT)）
+      logic-delete-field: null
+    banner: false
+
+logging:
+  level:
+    com.securedoc.kgc: debug
+
+# KGC 专属配置
+kgc:
+  # 服务间调用令牌（签发类接口校验，Step8）。生产用环境变量注入，切勿用默认值。
+  service-token: ${KGC_SERVICE_TOKEN:dev-kgc-token-change-me}
+  master-key:
+    # 主密钥落盘加密口令（PBKDF2 派生 → AES-GCM）。生产必须用环境变量，切勿用默认值。
+    passphrase: ${KGC_MASTER_PASSPHRASE:dev-kgc-master-passphrase-change-me}
+    # 主密钥密文文件路径（相对运行目录 kgc-service/）
+    file: ${KGC_MASTER_KEY_FILE:data/sm9-master.key}

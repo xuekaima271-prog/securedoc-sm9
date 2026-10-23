@@ -1,0 +1,23 @@
+# =============================================================================
+# 开发档(dev)：H2 内存数据库 + MySQL 兼容模式，零安装
+# 启动时自动执行 ../database/schema.sql 与 ../database/init_data.sql（含 users 种子 + kgc 表）
+# 运行目录约定：在 kgc-service/ 下执行 `./mvnw spring-boot:run`（故用 ../database 相对路径）
+# 注：独立内存库名 securedoc_kgc，与应用服务器(:8080)的 H2 互不影响
+# =============================================================================
+spring:
+  datasource:
+    url: jdbc:h2:mem:securedoc_kgc;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always            # H2 内存库每次启动全新，重建表+种子
+      encoding: UTF-8         # 关键：脚本含中文，必须 UTF-8，否则乱码（已实测）
+      schema-locations: file:../database/schema.sql
+      data-locations: file:../database/init_data.sql
+      continue-on-error: false
+  h2:
+    console:
+      enabled: ${SECUREDOC_H2_CONSOLE_ENABLED:false} # 显式设 true 才为本机调试打开
+      path: /h2-console
