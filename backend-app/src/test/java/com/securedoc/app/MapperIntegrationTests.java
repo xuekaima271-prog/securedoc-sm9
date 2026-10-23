@@ -50,9 +50,10 @@ class MapperIntegrationTests {
     }
 
     @Test
-    void admin拥有SYS_ADMIN角色() {
+    void admin拥有系统管理员与超级管理员角色() {
         User admin = userMapper.selectByUsername("admin");
-        assertThat(roleMapper.selectRoleCodesByUserId(admin.getId())).containsExactly("SYS_ADMIN");
+        assertThat(roleMapper.selectRoleCodesByUserId(admin.getId()))
+                .containsExactlyInAnyOrder("SYS_ADMIN", "SUPER_ADMIN");
     }
 
     @Test

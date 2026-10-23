@@ -9,10 +9,10 @@ const routes = [
   { path: '/inbox', component: () => import('./pages/Inbox.vue') },
   { path: '/decrypt/:fileId', component: () => import('./pages/Decrypt.vue') },
   { path: '/outbox', component: () => import('./pages/Outbox.vue') },
-  { path: '/admin/files', component: () => import('./pages/AdminFiles.vue'), meta: { roles: ['SYS_ADMIN'] } },
-  { path: '/admin/users', component: () => import('./pages/AdminUsers.vue'), meta: { roles: ['SYS_ADMIN'] } },
-  { path: '/audit', component: () => import('./pages/Audit.vue'), meta: { roles: ['SECURITY_AUDITOR', 'SYS_ADMIN'] } },
-  { path: '/security-events', component: () => import('./pages/SecurityEvents.vue'), meta: { roles: ['SECURITY_AUDITOR', 'SYS_ADMIN'] } },
+  { path: '/admin/files', component: () => import('./pages/AdminFiles.vue'), meta: { roles: ['SYS_ADMIN', 'SUPER_ADMIN'] } },
+  { path: '/admin/users', component: () => import('./pages/AdminUsers.vue'), meta: { roles: ['SYS_ADMIN', 'SUPER_ADMIN'] } },
+  { path: '/audit', component: () => import('./pages/Audit.vue'), meta: { roles: ['SECURITY_AUDITOR', 'SYS_ADMIN', 'SUPER_ADMIN'] } },
+  { path: '/security-events', component: () => import('./pages/SecurityEvents.vue'), meta: { roles: ['SECURITY_AUDITOR', 'SYS_ADMIN', 'SUPER_ADMIN'] } },
   { path: '/selftest', component: () => import('./pages/SelfTest.vue'), meta: { public: true } },
 ];
 

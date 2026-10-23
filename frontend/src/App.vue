@@ -34,10 +34,10 @@ async function logout() {
         <router-link to="/inbox" title="收件箱"><Icon name="inbox" /><span class="nav-label">收件箱</span></router-link>
         <router-link to="/outbox" title="发件箱"><Icon name="outbox" /><span class="nav-label">发件箱</span></router-link>
         <router-link to="/key-init" title="我的密钥"><Icon name="key" /><span class="nav-label">我的密钥</span></router-link>
-        <router-link v-if="hasRole('SYS_ADMIN')" to="/admin/users" title="用户管理"><Icon name="users" /><span class="nav-label">用户管理</span></router-link>
-        <router-link v-if="hasRole('SYS_ADMIN')" to="/admin/files" title="密文记录"><Icon name="database" /><span class="nav-label">密文记录</span></router-link>
-        <router-link v-if="hasRole('SYS_ADMIN') || hasRole('SECURITY_AUDITOR')" to="/audit" title="审计"><Icon name="audit" /><span class="nav-label">审计</span></router-link>
-        <router-link v-if="hasRole('SYS_ADMIN') || hasRole('SECURITY_AUDITOR')" to="/security-events" title="安全事件"><Icon name="shield" /><span class="nav-label">安全事件</span></router-link>
+        <router-link v-if="hasRole('SYS_ADMIN') || hasRole('SUPER_ADMIN')" to="/admin/users" title="用户管理"><Icon name="users" /><span class="nav-label">用户管理</span></router-link>
+        <router-link v-if="hasRole('SYS_ADMIN') || hasRole('SUPER_ADMIN')" to="/admin/files" title="密文记录"><Icon name="database" /><span class="nav-label">密文记录</span></router-link>
+        <router-link v-if="hasRole('SYS_ADMIN') || hasRole('SUPER_ADMIN') || hasRole('SECURITY_AUDITOR')" to="/audit" title="审计"><Icon name="audit" /><span class="nav-label">审计</span></router-link>
+        <router-link v-if="hasRole('SYS_ADMIN') || hasRole('SUPER_ADMIN') || hasRole('SECURITY_AUDITOR')" to="/security-events" title="安全事件"><Icon name="shield" /><span class="nav-label">安全事件</span></router-link>
         <router-link to="/selftest" title="国密自检"><Icon name="flask" /><span class="nav-label">国密自检</span></router-link>
       </nav>
       <div class="side-foot">

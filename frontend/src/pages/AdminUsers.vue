@@ -10,7 +10,7 @@ const users = ref([]);
 const loaded = ref(false);
 const msg = ref('');
 const msgType = ref('info');
-const ALL_ROLES = ['EMPLOYEE', 'SYS_ADMIN', 'SECURITY_AUDITOR', 'DEPT_ADMIN', 'KGC_ADMIN'];
+const ALL_ROLES = ['EMPLOYEE', 'SYS_ADMIN', 'SUPER_ADMIN', 'SECURITY_AUDITOR', 'KGC_ADMIN'];
 
 const showCreate = ref(false);
 const creating = ref(false);

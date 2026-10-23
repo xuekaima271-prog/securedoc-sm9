@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** 角色查询（§2.3）。仅 SYS_ADMIN 可访问。 */
+/** 角色查询（§2.3）。SYS_ADMIN/SUPER_ADMIN 可访问。 */
 @RestController
 @RequestMapping("/api")
 public class RoleController {
@@ -22,7 +22,7 @@ public class RoleController {
     }
 
     @GetMapping("/roles")
-    @PreAuthorize("hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN','SUPER_ADMIN')")
     public ApiResponse<List<Role>> listRoles() {
         return ApiResponse.ok(roleMapper.selectList(null));
     }

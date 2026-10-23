@@ -10,13 +10,14 @@
 -- 执行顺序：先 roles，再 users，再 user_roles / user_keys
 -- =============================================================================
 
--- ---- 角色（5 个角色编码；MVP 仅分配 EMPLOYEE/SYS_ADMIN/SECURITY_AUDITOR）----
+-- ---- 角色（6 个角色编码；种子分配 EMPLOYEE/SYS_ADMIN/SUPER_ADMIN/SECURITY_AUDITOR，DEPT_ADMIN 不分配）----
 INSERT INTO roles (role_code, role_name, description) VALUES
     ('EMPLOYEE',         '普通员工',   '发送/接收文件、解密下载、SM9 密钥初始化'),
-    ('SYS_ADMIN',        '系统管理员', '管理用户、查看密文文件记录(不可解密)、查看基础审计'),
+    ('SYS_ADMIN',        '系统管理员', '管理普通用户、查看密文文件记录(不可解密)、查看基础审计'),
+    ('SUPER_ADMIN',      '超级管理员', '最高权限：任免管理员账号（仅种子初始管理员持有，后续只能由超管授予）'),
     ('SECURITY_AUDITOR', '安全审计员', '查看审计日志与安全事件'),
     ('DEPT_ADMIN',       '部门管理员', '后续扩展，MVP 不分配'),
-    ('KGC_ADMIN',        'KGC管理员',  '查看 KGC 私钥签发记录（简化实现）');
+    ('KGC_ADMIN',        'KGC管理员',  '查看 KGC 私钥签发记录');
 
 -- ---- 用户（密码均为 Demo@123）----
 INSERT INTO users (id, username, password_hash, real_name, email, status) VALUES
@@ -31,6 +32,7 @@ INSERT INTO user_roles (user_id, role_id) SELECT 10001, id FROM roles WHERE role
 INSERT INTO user_roles (user_id, role_id) SELECT 10002, id FROM roles WHERE role_code = 'EMPLOYEE';
 INSERT INTO user_roles (user_id, role_id) SELECT 10003, id FROM roles WHERE role_code = 'EMPLOYEE';
 INSERT INTO user_roles (user_id, role_id) SELECT 10004, id FROM roles WHERE role_code = 'SYS_ADMIN';
+INSERT INTO user_roles (user_id, role_id) SELECT 10004, id FROM roles WHERE role_code = 'SUPER_ADMIN';
 INSERT INTO user_roles (user_id, role_id) SELECT 10005, id FROM roles WHERE role_code = 'SECURITY_AUDITOR';
 
 -- ---- SM9 身份标识（key_status=UNINITIALIZED：尚未向 KGC 签发私钥）----

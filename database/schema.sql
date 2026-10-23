@@ -42,7 +42,7 @@ DROP TABLE IF EXISTS roles;
 -- =============================================================================
 CREATE TABLE roles (
     id          BIGINT       NOT NULL AUTO_INCREMENT,
-    role_code   VARCHAR(32)  NOT NULL,                 -- 角色编码：EMPLOYEE/SYS_ADMIN/SECURITY_AUDITOR/DEPT_ADMIN/KGC_ADMIN
+    role_code   VARCHAR(32)  NOT NULL,                 -- 角色编码：EMPLOYEE/SYS_ADMIN/SUPER_ADMIN/SECURITY_AUDITOR/DEPT_ADMIN/KGC_ADMIN
     role_name   VARCHAR(64)  NOT NULL,                 -- 角色名称（展示用）
     description VARCHAR(255),                          -- 角色说明
     created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,

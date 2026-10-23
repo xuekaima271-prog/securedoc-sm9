@@ -17,7 +17,7 @@ public class Role {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private String roleCode;        // EMPLOYEE/SYS_ADMIN/SECURITY_AUDITOR/DEPT_ADMIN/KGC_ADMIN
+    private String roleCode;        // EMPLOYEE/SYS_ADMIN/SUPER_ADMIN/SECURITY_AUDITOR/DEPT_ADMIN/KGC_ADMIN
     private String roleName;
     private String description;
 

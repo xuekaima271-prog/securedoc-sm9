@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** 管理员接口（§2.9）。仅 SYS_ADMIN 可访问；只返回密文视角，绝不含明文/密钥。 */
+/** 管理员接口（§2.9）。SYS_ADMIN/SUPER_ADMIN 可访问；只返回密文视角，绝不含明文/密钥。管理员任免等细粒度规则在 AdminUserService 层按超管分级校验。 */
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
@@ -44,11 +44,11 @@ public class AdminController {
     }
 
     /**
-     * KGC 私钥签发记录（§2.4 签发审计/KGC_ADMIN 简化实现：管理员与审计员可查）。
+     * KGC 私钥签发记录（§2.4 签发审计：系统/超级/KGC 管理员与审计员可查，KGC_ADMIN 于 2026-10-23 接入鉴权）。
      * 经服务端令牌代理 KGC /kgc/sm9/issues，浏览器不接触 KGC 令牌；记录含 issueType(FIRST/REISSUE)。
      */
     @GetMapping("/kgc-issues")
-    @PreAuthorize("hasAnyRole('SYS_ADMIN','SECURITY_AUDITOR')")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN','SUPER_ADMIN','SECURITY_AUDITOR','KGC_ADMIN')")
     public ApiResponse<com.fasterxml.jackson.databind.JsonNode> kgcIssues(
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "1") long page,
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "20") long size,
@@ -57,21 +57,21 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    @PreAuthorize("hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN','SUPER_ADMIN')")
     public ApiResponse<List<UserSummary>> listUsers() {
         return ApiResponse.ok(adminUserService.listUsers());
     }
 
     /** 密文记录页（§2.10 必做）：列出全部文件密文记录，证明管理员可审计、不可解密。 */
     @GetMapping("/files")
-    @PreAuthorize("hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN','SUPER_ADMIN')")
     public ApiResponse<List<AdminFileView>> listFiles() {
         return ApiResponse.ok(adminFileService.listFiles());
     }
 
     /** 新增用户（§2.3）：建账号+分配角色+生成 SM9 身份并登记到 KGC。 */
     @PostMapping("/users")
-    @PreAuthorize("hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN','SUPER_ADMIN')")
     public ApiResponse<UserSummary> createUser(@Valid @RequestBody CreateUserRequest req,
                                                @AuthenticationPrincipal SecurityUser admin,
                                                HttpServletRequest http) {
@@ -80,7 +80,7 @@ public class AdminController {
 
     /** 启停用户（§2.3 / BE-7）：ACTIVE/DISABLED/LOCKED。 */
     @PutMapping("/users/{id}/status")
-    @PreAuthorize("hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN','SUPER_ADMIN')")
     public ApiResponse<Void> updateStatus(@PathVariable Long id,
                                           @Valid @RequestBody UpdateUserStatusRequest req,
                                           @AuthenticationPrincipal SecurityUser admin,
@@ -91,7 +91,7 @@ public class AdminController {
 
     /** 改用户角色（§2.3 / BE-7）：整集替换。 */
     @PutMapping("/users/{id}/roles")
-    @PreAuthorize("hasRole('SYS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYS_ADMIN','SUPER_ADMIN')")
     public ApiResponse<Void> updateRoles(@PathVariable Long id,
                                          @Valid @RequestBody UpdateUserRolesRequest req,
                                          @AuthenticationPrincipal SecurityUser admin,

@@ -28,5 +28,5 @@ export function fmtTimeFull(t) {
 }
 
 /** 角色码 → 中文名 */
-const ROLE_NAMES = { EMPLOYEE: '员工', SYS_ADMIN: '系统管理员', SECURITY_AUDITOR: '安全审计员', DEPT_ADMIN: '部门管理员', KGC_ADMIN: 'KGC管理员' };
+const ROLE_NAMES = { EMPLOYEE: '员工', SYS_ADMIN: '系统管理员', SUPER_ADMIN: '超级管理员', SECURITY_AUDITOR: '安全审计员', DEPT_ADMIN: '部门管理员', KGC_ADMIN: 'KGC管理员' };
 export function roleName(code) { return ROLE_NAMES[code] || code; }

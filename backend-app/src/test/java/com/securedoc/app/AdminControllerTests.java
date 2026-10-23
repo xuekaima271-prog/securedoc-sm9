@@ -46,10 +46,18 @@ class AdminControllerTests {
 
     @Test
     @WithMockUser(roles = {"SYS_ADMIN"})
-    void 管理员可查角色列表_5个() throws Exception {
+    void 管理员可查角色列表_6个() throws Exception {
         mvc.perform(get("/api/roles"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(5));
+                .andExpect(jsonPath("$.data.length()").value(6));
+    }
+
+    @Test
+    @WithMockUser(username = "root", roles = {"SUPER_ADMIN"})
+    void 超级管理员可查用户列表() throws Exception {
+        mvc.perform(get("/api/admin/users"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
     }
 
     @Test

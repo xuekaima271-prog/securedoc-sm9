@@ -28,12 +28,20 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/** 管理员用户视图装配 + 写操作（新增 / 启停 / 改角色，§2.3，BE-7）。 */
+/**
+ * 管理员用户视图装配 + 写操作（新增 / 启停 / 改角色，§2.3，BE-7）。
+ * 权限分级（2026-10-23）：新增 SUPER_ADMIN 超级管理员——只有超管能授予/撤销管理员类角色、
+ * 能修改管理员账号的角色与状态；普通 SYS_ADMIN 只能管理非管理员账号。
+ * 系统级保底：可用管理员（ACTIVE 且持 SYS_ADMIN/SUPER_ADMIN）至少保留 1 个，最后一个不可降权/停用。
+ */
 @Service
 public class AdminUserService {
 
     private static final Logger log = LoggerFactory.getLogger(AdminUserService.class);
     private static final Set<String> VALID_STATUS = Set.of("ACTIVE", "DISABLED", "LOCKED");
+    private static final String ROLE_SUPER_ADMIN = "SUPER_ADMIN";
+    /** 管理员类角色：任免受超管专属与"最后一个管理员"保底约束。 */
+    private static final Set<String> ADMIN_ROLES = Set.of("SYS_ADMIN", "SUPER_ADMIN");
     /** SM9 身份租户段（与 init_data 种子一致）。 */
     private static final String TENANT = "corp001";
 
@@ -78,6 +86,9 @@ public class AdminUserService {
         List<String> unknown = roles.stream().filter(c -> !roleIdByCode.containsKey(c)).toList();
         if (!unknown.isEmpty()) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "未知角色编码: " + unknown);
+        }
+        if (containsAdminRole(roles) && !isSuperAdmin(adminId)) {
+            throw new BusinessException(ErrorCode.PERMISSION_DENIED, "只有超级管理员可以创建管理员账号");
         }
 
         // ---- 阶段1：本地事务落库（用户名撞唯一键的并发竞态由 DB 约束兜底）----
@@ -125,6 +136,45 @@ public class AdminUserService {
                 roles, "UNINITIALIZED");
     }
 
+    // ---------- 权限分级辅助 ----------
+
+    private boolean isSuperAdmin(Long userId) {
+        return roleMapper.selectRoleCodesByUserId(userId).contains(ROLE_SUPER_ADMIN);
+    }
+
+    private boolean holdsAdminRole(Long userId) {
+        return roleMapper.selectRoleCodesByUserId(userId).stream().anyMatch(ADMIN_ROLES::contains);
+    }
+
+    private static boolean containsAdminRole(List<String> roleCodes) {
+        return roleCodes.stream().anyMatch(ADMIN_ROLES::contains);
+    }
+
+    /** 当前可用管理员数：状态 ACTIVE 且持有管理员类角色的用户数。 */
+    private long countActiveAdmins() {
+        Set<Long> adminIds = userRoleMapper.selectAllRoleCodes().stream()
+                .filter(v -> ADMIN_ROLES.contains(v.getRoleCode()))
+                .map(UserRoleCodeView::getUserId)
+                .collect(Collectors.toSet());
+        if (adminIds.isEmpty()) {
+            return 0;
+        }
+        return userMapper.selectList(new LambdaQueryWrapper<User>()
+                .eq(User::getStatus, "ACTIVE")
+                .in(User::getId, adminIds)).size();
+    }
+
+    /**
+     * "最后一个管理员"保底：目标当前是可用管理员且系统只剩这一个时，禁止使其失去管理员可用性
+     * （降权走 updateRoles、停用走 updateStatus 两处调用）。显式规则，不再依赖"禁止改自己"的副作用。
+     */
+    private void assertNotLastActiveAdmin(User target, String action) {
+        if ("ACTIVE".equals(target.getStatus()) && holdsAdminRole(target.getId()) && countActiveAdmins() <= 1) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST,
+                    "系统必须至少保留一个可用管理员，不能" + action + "最后一个管理员");
+        }
+    }
+
     /** Saga 补偿：按外键逆序删除阶段1 落库的三表数据。失败仅记日志（登记幂等，人工可重试清理）。 */
     private void compensateDelete(Long userId) {
         try {
@@ -169,6 +219,12 @@ public class AdminUserService {
         if (u == null) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "用户不存在: " + targetUserId);
         }
+        if (!isSuperAdmin(adminId) && holdsAdminRole(targetUserId)) {
+            throw new BusinessException(ErrorCode.PERMISSION_DENIED, "只有超级管理员可以修改管理员账号的状态");
+        }
+        if (!"ACTIVE".equals(status)) {
+            assertNotLastActiveAdmin(u, "停用/锁定");
+        }
         String old = u.getStatus();
         u.setStatus(status);
         userMapper.updateById(u);
@@ -195,6 +251,17 @@ public class AdminUserService {
         List<String> unknown = roleCodes.stream().distinct().filter(c -> !roleIdByCode.containsKey(c)).toList();
         if (!unknown.isEmpty()) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "未知角色编码: " + unknown);
+        }
+        if (!isSuperAdmin(adminId)) {
+            if (holdsAdminRole(targetUserId)) {
+                throw new BusinessException(ErrorCode.PERMISSION_DENIED, "只有超级管理员可以修改管理员账号的角色");
+            }
+            if (containsAdminRole(roleCodes)) {
+                throw new BusinessException(ErrorCode.PERMISSION_DENIED, "只有超级管理员可以授予管理员角色");
+            }
+        }
+        if (!containsAdminRole(roleCodes)) {
+            assertNotLastActiveAdmin(u, "降级");
         }
         // 重置：删旧 + 插新
         userRoleMapper.delete(new LambdaQueryWrapper<UserRole>().eq(UserRole::getUserId, targetUserId));

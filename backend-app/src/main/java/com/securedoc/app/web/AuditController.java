@@ -27,7 +27,7 @@ public class AuditController {
     }
 
     @GetMapping("/logs")
-    @PreAuthorize("hasAnyRole('SECURITY_AUDITOR','SYS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SECURITY_AUDITOR','SYS_ADMIN','SUPER_ADMIN')")
     public ApiResponse<PageResult<AuditLog>> logs(
             @RequestParam(defaultValue = "1") long page,
             @RequestParam(defaultValue = "20") long size,
@@ -39,14 +39,14 @@ public class AuditController {
 
     /** 校验审计哈希链完整性（§2.2.11 / §13）：证明日志未被篡改/删除/重排。 */
     @GetMapping("/verify")
-    @PreAuthorize("hasAnyRole('SECURITY_AUDITOR','SYS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SECURITY_AUDITOR','SYS_ADMIN','SUPER_ADMIN')")
     public ApiResponse<AuditChainResult> verify() {
         return ApiResponse.ok(auditService.verifyChain());
     }
 
     /** 安全事件查询（§2.2.12 安全事件告警，增强项）。 */
     @GetMapping("/security-events")
-    @PreAuthorize("hasAnyRole('SECURITY_AUDITOR','SYS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SECURITY_AUDITOR','SYS_ADMIN','SUPER_ADMIN')")
     public ApiResponse<PageResult<SecurityEvent>> securityEvents(
             @RequestParam(defaultValue = "1") long page,
             @RequestParam(defaultValue = "20") long size,
