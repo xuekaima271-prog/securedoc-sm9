@@ -8,6 +8,7 @@ import { secureDoc, b64ToBytes } from '../crypto/index.js';
 import { callWorker, workerAvailable } from '../crypto/worker-client.js';
 import { fmtSize } from '../utils/fmt.js';
 import { createDecryptedFile } from '../utils/decrypted-file.js';
+import Icon from '../components/Icon.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -128,35 +129,33 @@ onBeforeUnmount(clearResult);
     <h2>解密下载</h2>
     <p class="sub">全部步骤在浏览器内完成：SM9 解封密钥 → 逐块 SM3 校验 → SM4 解密。<span class="mono">fileId={{ fileId.slice(0, 8) }}…</span></p>
 
-    <div class="progress" v-if="busy || percent > 0"><div class="bar" :style="{ width: percent + '%' }"></div></div>
+    <div class="progress" role="progressbar" :aria-valuenow="percent" aria-valuemin="0" aria-valuemax="100" v-if="busy || percent > 0"><div class="bar" :style="{ width: percent + '%' }"></div></div>
     <ol class="steps">
       <li v-for="(s, i) in steps" :key="i" :class="{ doing: busy && i === steps.length - 1 }">{{ s }}</li>
     </ol>
     <div class="msg" :class="msgType" v-if="msg">{{ msg }}</div>
 
-    <div v-if="unlockRequired" class="row" style="margin-top:.8rem; max-width:520px; align-items:end;">
-      <div style="flex:1; min-width:220px;">
+    <div v-if="unlockRequired" class="row unlock-row">
+      <div class="field-cell">
         <label for="unlock-password">本地保护口令</label>
         <input id="unlock-password" v-model="unlockPassword" type="password" autocomplete="current-password" :disabled="busy"
                placeholder="输入“我的密钥”页设置的口令" @keyup.enter="run" />
       </div>
-      <button class="ghost" :disabled="busy" @click="run">解锁并解密</button>
+      <button class="ghost" :disabled="busy" @click="run"><Icon name="unlock" />解锁并解密</button>
     </div>
 
     <div v-if="result" class="done fade-in">
-      <div class="icon">🔓</div>
+      <div class="icon"><Icon name="unlock" /></div>
       <div class="title">解密成功：{{ result.fileName }}（{{ fmtSize(result.size) }}）</div>
-      <div v-if="result.remark" class="msg info" style="text-align:left">📝 加密备注：{{ result.remark }}</div>
-      <img v-if="result.preview?.type === 'image'" :src="result.preview.src"
-           style="max-width:100%; max-height:340px; border-radius:8px; margin:.6rem 0; box-shadow:var(--shadow-lg)" />
-      <pre v-else-if="result.preview?.type === 'text'"
-           style="text-align:left; background:#fff; border:1px solid var(--line); border-radius:8px; padding:.8rem; max-height:280px; overflow:auto; font-size:.82rem">{{ result.preview.text }}</pre>
-      <div style="margin-top:.6rem">
-        <a :href="result.url" :download="result.fileName"><button class="big">⬇ 下载「{{ result.fileName }}」</button></a>
+      <div v-if="result.remark" class="msg info" style="text-align:left"><Icon name="note" /> 加密备注：{{ result.remark }}</div>
+      <img v-if="result.preview?.type === 'image'" :src="result.preview.src" class="preview-img" />
+      <pre v-else-if="result.preview?.type === 'text'" class="preview-text">{{ result.preview.text }}</pre>
+      <div class="mt-2">
+        <a :href="result.url" :download="result.fileName"><button class="big"><Icon name="download" />下载「{{ result.fileName }}」</button></a>
       </div>
     </div>
 
-    <div class="row" style="margin-top: 1rem;">
+    <div class="row mt-4">
       <button v-if="result" class="ghost" :disabled="busy" @click="clearResult">锁定并清除预览</button>
       <button class="link" @click="router.push('/inbox')">← 返回收件箱</button>
     </div>

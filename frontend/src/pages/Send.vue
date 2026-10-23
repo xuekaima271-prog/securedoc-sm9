@@ -6,6 +6,7 @@ import { secureDoc, b64ToBytes } from '../crypto/index.js';
 import { callWorker, workerAvailable } from '../crypto/worker-client.js';
 import { session } from '../store/session.js';
 import { fmtSize } from '../utils/fmt.js';
+import Icon from '../components/Icon.vue';
 
 const router = useRouter();
 const recipients = ref([]);
@@ -142,10 +143,10 @@ onMounted(load);
 
     <!-- 成功面板 -->
     <div v-if="done" class="done fade-in">
-      <div class="icon">✅</div>
+      <div class="icon"><Icon name="checkCircle" /></div>
       <div class="title">已加密投递给 {{ done.count }} 位接收人</div>
       <div class="mono">fileId = {{ done.fileId }} · {{ done.chunks }} 个密文分块 · 明文与密钥从未离开浏览器</div>
-      <div class="row" style="justify-content:center; margin-top:1rem;">
+      <div class="row row-center mt-4">
         <button class="ghost" @click="router.push('/outbox')">查看发件箱</button>
         <button @click="reset">再发一份</button>
       </div>
@@ -157,14 +158,14 @@ onMounted(load);
       <div class="drop" :class="{ over: dragOver }"
            @click="$refs.fi.click()"
            @dragover.prevent="dragOver = true" @dragleave="dragOver = false" @drop.prevent="onDrop">
-        <div class="icon">📄</div>
+        <div class="icon"><Icon name="file" /></div>
         <div>点击选择文件，或拖拽到这里</div>
         <div class="hint">任意类型均可；大文件自动分块加密</div>
         <input ref="fi" type="file" style="display:none" @change="onInput" />
       </div>
       <div v-if="file" class="file-chip fade-in">
-        <span style="font-size:1.3rem">📎</span>
-        <div style="flex:1; min-width:0">
+        <span class="fc-ic"><Icon name="file" /></span>
+        <div class="grow">
           <div class="name">{{ file.name }}</div>
           <div class="meta">{{ fmtSize(file.size) }} · {{ file.type || '未知类型' }}</div>
         </div>
@@ -199,14 +200,14 @@ onMounted(load);
       </details>
 
       <!-- 进度与消息 -->
-      <div v-if="busy || percent > 0" style="margin-top:1rem">
-        <div class="progress"><div class="bar" :style="{ width: percent + '%' }"></div></div>
+      <div v-if="busy || percent > 0" class="mt-4">
+        <div class="progress" role="progressbar" :aria-valuenow="percent" aria-valuemin="0" aria-valuemax="100"><div class="bar" :style="{ width: percent + '%' }"></div></div>
         <div class="msg info" v-if="stage">{{ stage }}</div>
       </div>
       <div class="msg" :class="msgType" v-if="msg">{{ msg }}</div>
 
-      <button class="big" :disabled="busy" @click="send" style="margin-top: 1rem;">
-        {{ busy ? '处理中…' : '🔐 加密并发送' }}
+      <button class="big mt-4" :disabled="busy" @click="send">
+        <Icon name="lock" />{{ busy ? '处理中…' : '加密并发送' }}
       </button>
     </template>
   </div>

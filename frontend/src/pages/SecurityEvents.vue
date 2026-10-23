@@ -1,13 +1,15 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { auditApi } from '../api/index.js';
-import { fmtTime } from '../utils/fmt.js';
+import { fmtTimeFull } from '../utils/fmt.js';
+import Icon from '../components/Icon.vue';
 
 const page = ref({ records: [], total: 0, page: 1, size: 20 });
 const totalPages = computed(() => Math.max(1, Math.ceil(page.value.total / (page.value.size || 20))));
 const eventType = ref('');
 const severity = ref('');
 const msg = ref('');
+const loaded = ref(false);
 
 const TYPES = {
   BRUTE_FORCE_LOCK: '暴力破解锁定',
@@ -19,11 +21,12 @@ const TYPES = {
   AUDIT_CHAIN_BROKEN: '审计链断裂',
 };
 const SEV = { HIGH: '高危', MEDIUM: '中危', LOW: '低危' };
-const sevClass = (s) => (s === 'HIGH' ? 'red' : s === 'MEDIUM' ? '' : 'blue');
+const sevClass = (s) => (s === 'HIGH' ? 'red' : s === 'MEDIUM' ? 'amber' : 'blue');
 
 async function load(p = 1) {
   try { page.value = await auditApi.securityEvents({ page: p, size: 20, eventType: eventType.value, severity: severity.value }); }
   catch (e) { msg.value = e.message; }
+  finally { loaded.value = true; }
 }
 onMounted(() => load(1));
 </script>
@@ -43,26 +46,32 @@ onMounted(() => load(1));
         <option value="MEDIUM">中危</option>
         <option value="LOW">低危</option>
       </select>
-      <button class="ghost" @click="load(1)">刷新</button>
+      <button class="ghost" @click="load(1)"><Icon name="refresh" />刷新</button>
     </div>
     <div class="msg err" v-if="msg">{{ msg }}</div>
 
-    <table v-if="page.records && page.records.length">
-      <thead><tr><th>时间</th><th>类型</th><th>级别</th><th>触发用户</th><th>来源IP</th><th>资源</th><th>详情</th></tr></thead>
-      <tbody>
-        <tr v-for="e in page.records" :key="e.id">
-          <td>{{ fmtTime(e.createdAt) }}</td>
-          <td>{{ TYPES[e.eventType] || e.eventType }}</td>
-          <td><span class="tag" :class="sevClass(e.severity)">{{ SEV[e.severity] || e.severity }}</span></td>
-          <td>{{ e.actorId ?? '未登录' }}</td>
-          <td class="mono">{{ e.clientIp }}</td>
-          <td class="mono">{{ e.resource }}</td>
-          <td>{{ e.detail }}</td>
-        </tr>
-      </tbody>
-    </table>
-    <div v-else class="empty"><div class="icon">🛡</div>暂无安全事件（系统安全态势良好）</div>
-    <div class="row" style="margin-top:0.6rem;">
+    <div class="table-wrap" v-if="page.records && page.records.length">
+      <table class="wide">
+        <thead><tr><th>时间</th><th>类型</th><th>级别</th><th>触发用户</th><th>来源IP</th><th>资源</th><th>详情</th></tr></thead>
+        <tbody>
+          <tr v-for="e in page.records" :key="e.id">
+            <td class="mono">{{ fmtTimeFull(e.createdAt) }}</td>
+            <td>{{ TYPES[e.eventType] || e.eventType }}</td>
+            <td><span class="tag" :class="sevClass(e.severity)">{{ SEV[e.severity] || e.severity }}</span></td>
+            <td>{{ e.actorId ?? '未登录' }}</td>
+            <td class="mono">{{ e.clientIp }}</td>
+            <td class="mono">{{ e.resource }}</td>
+            <td class="cell-clip" :title="e.detail || ''">{{ e.detail }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div v-else-if="!loaded" class="loading">
+      <div class="load-note">正在加载安全事件…</div>
+      <div class="skel"><div class="skel-row"></div><div class="skel-row w70"></div><div class="skel-row w45"></div></div>
+    </div>
+    <div v-else-if="!msg" class="empty"><Icon name="shield" class="empty-ic" /><div>暂无安全事件（系统安全态势良好）</div></div>
+    <div class="row mt-2">
       <span class="mono">共 {{ page.total }} 条 · 第 {{ page.page }} / {{ totalPages }} 页</span>
       <button class="ghost" :disabled="page.page <= 1" @click="load(page.page - 1)">上一页</button>
       <button class="ghost" :disabled="page.page >= totalPages" @click="load(page.page + 1)">下一页</button>

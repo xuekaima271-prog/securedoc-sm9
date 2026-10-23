@@ -8,7 +8,7 @@ const demos = [
 </script>
 
 <template>
-  <p style="margin: 1rem 0 0; font-size: 0.85rem; color: var(--muted);">演示账号（密码 Demo@123）：</p>
+  <p class="demo-note">演示账号（密码 Demo@123）：</p>
   <div class="demo-accounts">
     <button v-for="d in demos" :key="d.u" @click="emit('fill', d.u, 'Demo@123')" :title="d.d">{{ d.u }} · {{ d.d }}</button>
   </div>

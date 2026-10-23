@@ -3,6 +3,7 @@ import { ref, defineAsyncComponent } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { authApi } from '../api/index.js';
 import { setUser } from '../store/session.js';
+import Icon from '../components/Icon.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -33,21 +34,28 @@ async function submit() {
 </script>
 
 <template>
-  <div style="max-width: 420px; margin: 8vh auto 0;" class="fade-in">
-    <div style="text-align:center; margin-bottom:1rem;">
-      <div style="font-size:2.6rem">🔐</div>
-      <h2 style="margin:.3rem 0 .2rem">端到端加密文档投递</h2>
-      <p class="sub" style="margin:0">国密 SM9 / SM4 / SM3 · 加解密全程在浏览器内 · 服务器不可解密</p>
-    </div>
-    <div class="card">
+  <div class="login-wrap fade-in">
+    <section class="login-brand">
+      <Icon name="seal" class="seal-mark" />
+      <h1>端到端加密<br />文档投递</h1>
+      <p>文件在浏览器内以 SM4 加密、密钥经 SM9 按身份封装，审计以 SM3 哈希链留痕。服务器与管理员全程只见密文。</p>
+      <div class="chips">
+        <span class="chip">SM9 身份加密</span>
+        <span class="chip">SM4 分块加密</span>
+        <span class="chip">SM3 哈希链审计</span>
+      </div>
+    </section>
+    <div class="card login-card">
+      <h2>登录</h2>
+      <p class="sub">使用你的账号进入投递控制台。</p>
       <form @submit.prevent="submit">
         <label>用户名</label>
         <input v-model="username" autocomplete="username" />
         <label>密码</label>
         <input v-model="password" type="password" autocomplete="current-password" />
         <div class="msg err" v-if="err">{{ err }}</div>
-        <button type="submit" class="big" :disabled="busy" style="margin-top: 1.1rem; width: 100%;">
-          {{ busy ? '登录中…' : '登 录' }}
+        <button type="submit" class="big login-btn" :disabled="busy">
+          {{ busy ? '登录中…' : '登录' }}
         </button>
       </form>
       <DemoAccounts v-if="DemoAccounts" @fill="fill" />

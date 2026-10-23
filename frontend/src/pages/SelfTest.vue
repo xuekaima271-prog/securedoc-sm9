@@ -97,28 +97,32 @@ async function run() {
 </script>
 
 <template>
-  <div class="card">
+  <div class="card fade-in">
     <h2>国密自检（浏览器内实跑）</h2>
-    <p>在<strong>当前浏览器</strong>中运行 SM3/SM4/SM9 正确性自检（含负例）与性能基准，证明国密算法真实运行于浏览器端。</p>
+    <p class="sub">在<strong>当前浏览器</strong>中运行 SM3/SM4/SM9 正确性自检（含负例）与性能基准，证明国密算法真实运行于浏览器端。</p>
     <button :disabled="running" @click="run">{{ running ? '运行中…（SM9 配对计算较慢）' : '开始自检' }}</button>
 
-    <table v-if="results.length" style="margin-top:1rem;">
-      <thead><tr><th>检查项</th><th>结果</th></tr></thead>
-      <tbody>
-        <tr v-for="(r, i) in results" :key="i">
-          <td>{{ r.name }}<span v-if="r.detail" class="mono"> — {{ r.detail }}</span></td>
-          <td><span class="tag" :class="{ green: r.pass }">{{ r.pass ? '✅ 通过' : '❌ 失败' }}</span></td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div v-if="bench.length" style="margin-top:1rem;">
-      <h3>性能基准（本机浏览器）</h3>
+    <div class="table-wrap mt-4" v-if="results.length">
       <table>
+        <thead><tr><th>检查项</th><th>结果</th></tr></thead>
         <tbody>
-          <tr v-for="(b, i) in bench" :key="i"><td>{{ b.name }}</td><td class="mono">{{ b.detail }}</td></tr>
+          <tr v-for="(r, i) in results" :key="i">
+            <td>{{ r.name }}<span v-if="r.detail" class="mono"> — {{ r.detail }}</span></td>
+            <td><span class="tag" :class="r.pass ? 'green' : 'red'">{{ r.pass ? '通过' : '失败' }}</span></td>
+          </tr>
         </tbody>
       </table>
+    </div>
+
+    <div v-if="bench.length" class="mt-4">
+      <h3>性能基准（本机浏览器）</h3>
+      <div class="table-wrap">
+        <table>
+          <tbody>
+            <tr v-for="(b, i) in bench" :key="i"><td>{{ b.name }}</td><td class="mono">{{ b.detail }}</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     <div v-if="done" class="msg" :class="results.every((r) => r.pass) ? 'ok' : 'err'">
       {{ results.every((r) => r.pass) ? `全部 ${results.length} 项自检通过` : '存在失败项' }}
