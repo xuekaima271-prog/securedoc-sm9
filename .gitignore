@@ -1,0 +1,37 @@
+# ---- Java / Maven ----
+backend-app/target/
+kgc-service/target/
+*.class
+
+# ---- 运行时数据（密文对象存储 / KGC 主密钥文件，绝不入库）----
+backend-app/data/
+kgc-service/data/
+data/
+
+# ---- Node ----
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ---- MinIO（可执行文件与对象数据，不入库）----
+deploy/minio/
+
+# ---- 工具与临时 ----
+tools/h2.jar
+*.log
+*.tmp
+cj.txt
+*.cj
+
+# ---- IDE / OS ----
+.idea/
+.vscode/
+*.iml
+Thumbs.db
+.DS_Store
+
+# ---- 备份目录（本地留存，不入库）----
+备份文件/
+
+# 主密钥文件绝不入库（2026-10-23 评审后加）
+*.key
