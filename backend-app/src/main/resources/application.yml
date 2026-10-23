@@ -1,0 +1,74 @@
+# =============================================================================
+# 应用服务器基础配置（公共部分）
+# Profile: dev=H2 零安装(默认)，prod=本机 MySQL（演示期）
+# =============================================================================
+server:
+  port: 8080
+  address: 127.0.0.1           # 默认仅本机访问；外部部署须经显式反向代理/网络策略放行
+  servlet:
+    session:
+      cookie:
+        http-only: true       # 降低 XSS 直接读取 JSESSIONID 的风险
+        same-site: lax        # 为现有 Cookie 会话提供跨站请求基线缓解
+  tomcat:
+    max-swallow-size: -1     # 原始二进制分块上传(非 multipart)不限制吞咽大小，避免大分块被截断
+
+spring:
+  application:
+    name: securedoc-backend-app
+  profiles:
+    active: dev               # 默认开发档：H2，无需安装任何数据库
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true   # 下划线列名 -> 驼峰字段（如 password_hash -> passwordHash）
+  global-config:
+    db-config:
+      id-type: auto           # 自增主键策略（演示账号10001起，新用户自动10006+；UUID表用@TableId(type=INPUT)单独指定）
+      logic-delete-field: null
+    banner: false
+
+logging:
+  level:
+    com.securedoc.app: debug
+
+# 登录限流（Step 3.5 / DB-2）
+securedoc:
+  login:
+    max-failures: 5          # 账号连续失败达此次数 → 锁定
+    lock-minutes: 15         # 锁定时长（分钟）
+    ip-max-failures: 10      # 单 IP 窗口内失败上限 → 限流（防账号锁定 DoS）
+    ip-window-minutes: 1     # IP 计数窗口（分钟）
+  # 文件记录服务（Step 5）
+  storage:
+    type: local                     # local=本地文件系统(默认,零安装) | minio=MinIO 对象存储
+    local-root: data/object-store   # dev 本地对象存储根目录（已 gitignore；prod 可换 MinIO/S3）
+    minio:                          # type=minio 时生效（deploy/minio/ 下有 minio.exe，见 README）
+      endpoint: http://127.0.0.1:9000
+      access-key: ${MINIO_ACCESS_KEY:minioadmin}
+      secret-key: ${MINIO_SECRET_KEY:minioadmin}
+      bucket: securedoc
+  file:
+    max-chunk-size: 8388608         # 单个密文分块上限(字节)，dev 兜底防超大请求(8MB)
+  # KGC 代理（Step 6）：令牌只在服务端，浏览器只与本应用通信；强制只能签发会话用户自己的身份
+  kgc:
+    base-url: http://localhost:8081      # KGC 服务地址
+    token: dev-kgc-token-change-me       # X-KGC-Token（与 kgc-service dev 一致；prod 改 mTLS/KGC_ADMIN）
+    connect-timeout-ms: 2000
+    read-timeout-ms: 5000
+  # CORS（Step 6 / BE-5）：前端 Vite dev server 跨域携带 Cookie 访问
+  cors:
+    allowed-origins: http://localhost:5173,http://127.0.0.1:5173
+
+# =============================================================================
+# 应用级开关（SEC-8 / M-2）
+# =============================================================================
+app:
+  # SEC-8：是否信任反向代理头（X-Forwarded-For / X-Real-IP）来解析客户端真实 IP。
+  # 默认 false = 只用 TCP 直连地址。仅当应用确实部署在可信反代之后才可开启；
+  # 开启时必须保证应用端口只能被该代理访问，否则任何人都能伪造 XFF 绕过登录限流、污染审计 IP。
+  trust-proxy-headers: false
+  upload:
+    max-chunk-count: 10000        # M-2：单个文件分块数上限
+    max-total-size: 2147483648    # M-2：单个文件声明总大小上限（字节）= 2GB
