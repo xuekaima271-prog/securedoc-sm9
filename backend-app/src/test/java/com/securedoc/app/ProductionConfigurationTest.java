@@ -20,6 +20,7 @@ class ProductionConfigurationTest {
         assertThat(p.getProperty("securedoc.kgc.token")).isEqualTo("${KGC_SERVICE_TOKEN}");
         assertThat(p.getProperty("securedoc.storage.minio.access-key")).isEqualTo("${MINIO_ACCESS_KEY}");
         assertThat(p.getProperty("securedoc.storage.minio.secret-key")).isEqualTo("${MINIO_SECRET_KEY}");
+        assertThat(p.getProperty("app.audit.hmac-key")).isEqualTo("${AUDIT_HMAC_KEY}");
     }
 
     @Test

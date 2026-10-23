@@ -38,3 +38,8 @@ securedoc:
     minio:
       access-key: ${MINIO_ACCESS_KEY}
       secret-key: ${MINIO_SECRET_KEY}
+
+# M-3：审计链 HMAC 密钥同样无兜底，缺 AUDIT_HMAC_KEY 即拒绝启动（不得回退 dev 默认值）。
+app:
+  audit:
+    hmac-key: ${AUDIT_HMAC_KEY}

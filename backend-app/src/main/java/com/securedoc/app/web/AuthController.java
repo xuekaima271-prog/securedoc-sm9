@@ -7,9 +7,11 @@ import com.securedoc.app.common.ErrorCode;
 import com.securedoc.app.entity.UserKey;
 import com.securedoc.app.mapper.UserKeyMapper;
 import com.securedoc.app.security.SecurityUser;
+import com.securedoc.app.service.AccountService;
 import com.securedoc.app.service.AuditService;
 import com.securedoc.app.service.LoginThrottleService;
 import com.securedoc.app.web.dto.AuthUserInfo;
+import com.securedoc.app.web.dto.ChangePasswordRequest;
 import com.securedoc.app.web.dto.LoginRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -48,6 +50,7 @@ public class AuthController {
     private final UserKeyMapper userKeyMapper;
     private final LoginThrottleService throttle;
     private final AuditService auditService;
+    private final AccountService accountService;
     private final ClientIpResolver clientIpResolver;
 
     public AuthController(AuthenticationManager authenticationManager,
@@ -55,12 +58,14 @@ public class AuthController {
                          UserKeyMapper userKeyMapper,
                          LoginThrottleService throttle,
                          AuditService auditService,
+                         AccountService accountService,
                          ClientIpResolver clientIpResolver) {
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
         this.userKeyMapper = userKeyMapper;
         this.throttle = throttle;
         this.auditService = auditService;
+        this.accountService = accountService;
         this.clientIpResolver = clientIpResolver;
     }
 
@@ -83,7 +88,7 @@ public class AuthController {
             context.setAuthentication(auth);
             SecurityContextHolder.setContext(context);
             securityContextRepository.saveContext(context, request, response);
-            throttle.recordSuccess(req.username());      // 成功：清零失败计数与锁定
+            throttle.recordSuccess(req.username(), ip);  // 成功：清零该(账号,来源)组合的失败计数与锁定
             SecurityUser principal = (SecurityUser) auth.getPrincipal();
             auditService.record(principal.getUserId(), "LOGIN", "AUTH", req.username(),
                     ip, request.getHeader("User-Agent"), "登录成功");
@@ -104,6 +109,27 @@ public class AuthController {
             throw new BusinessException(ErrorCode.AUTH_REQUIRED);
         }
         return ApiResponse.ok(toUserInfo(principal));
+    }
+
+    /**
+     * 自助改密（H-1）。成功后立即作废当前会话（与 logout 同款处理）：旧会话凭据自此失效，
+     * 必须用新密码重新登录；失败的改密请求不影响当前会话。
+     */
+    @PostMapping("/change-password")
+    public ApiResponse<Void> changePassword(@Valid @RequestBody ChangePasswordRequest req,
+                                            @AuthenticationPrincipal SecurityUser principal,
+                                            HttpServletRequest request) {
+        if (principal == null) {
+            throw new BusinessException(ErrorCode.AUTH_REQUIRED);
+        }
+        accountService.changePassword(principal.getUserId(), req.oldPassword(), req.newPassword(),
+                clientIpResolver.resolve(request));
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        SecurityContextHolder.clearContext();
+        return ApiResponse.ok();
     }
 
     @PostMapping("/logout")

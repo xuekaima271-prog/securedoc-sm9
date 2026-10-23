@@ -56,6 +56,15 @@ class FileInboxOutboxTest {
     }
 
     @Test
+    @WithUserDetails("alice")
+    void Alice发件箱条目带接收人Ids() throws Exception {   // FileSummary.recipientIds（发件箱「接收人」列数据源）
+        String fileId = seed("AVAILABLE");
+        mvc.perform(get("/api/files/outbox"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[?(@.fileId=='" + fileId + "')].recipientIds[0]").value(10002));
+    }
+
+    @Test
     @WithUserDetails("bob")
     void Bob收件箱含发给他的AVAILABLE文件() throws Exception {
         String fileId = seed("AVAILABLE");

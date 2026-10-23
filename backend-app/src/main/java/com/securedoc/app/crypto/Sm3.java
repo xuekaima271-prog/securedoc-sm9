@@ -80,4 +80,32 @@ public final class Sm3 {
     public static String digestBase64(byte[] msg) {
         return java.util.Base64.getEncoder().encodeToString(digest(msg));
     }
+
+    /**
+     * HMAC-SM3（RFC 2104 构造，分组长度 64 与 SM3 内部块长一致）：
+     * key 超块长先取摘要、再补零到块长，分别与 ipad/opad 异或后两段摘要。
+     * 供审计哈希链（M-3）使用：无密钥者无法伪造/整链重算。正确性由 Sm3Test 的
+     * 独立实现（OpenSSL）向量锁定（含超长 key 用例）。
+     */
+    public static byte[] hmac(byte[] key, byte[] msg) {
+        byte[] k = key.length > BLOCK_SIZE ? digest(key) : key;
+        byte[] inner = new byte[BLOCK_SIZE + msg.length];
+        byte[] outerPad = new byte[BLOCK_SIZE];
+        for (int i = 0; i < BLOCK_SIZE; i++) {
+            byte kb = i < k.length ? k[i] : 0;
+            inner[i] = (byte) (kb ^ 0x36);
+            outerPad[i] = (byte) (kb ^ 0x5c);
+        }
+        System.arraycopy(msg, 0, inner, BLOCK_SIZE, msg.length);
+        byte[] innerHash = digest(inner);
+        byte[] outer = new byte[BLOCK_SIZE + innerHash.length];
+        System.arraycopy(outerPad, 0, outer, 0, BLOCK_SIZE);
+        System.arraycopy(innerHash, 0, outer, BLOCK_SIZE, innerHash.length);
+        return digest(outer);
+    }
+
+    /** HMAC-SM3 的 Base64 表示。 */
+    public static String hmacBase64(byte[] key, byte[] msg) {
+        return java.util.Base64.getEncoder().encodeToString(hmac(key, msg));
+    }
 }

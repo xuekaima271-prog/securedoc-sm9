@@ -80,7 +80,7 @@ public class KeyController {
             throttle.recordFailure(user.getUsername(), ip);
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
-        throttle.recordSuccess(user.getUsername());
+        throttle.recordSuccess(user.getUsername(), ip);
         return ApiResponse.ok(keyService.initKey(user.getUserId(), req.deviceFingerprint(), ip));
     }
 }

@@ -70,6 +70,14 @@ class AuditChainTest {
     }
 
     @Test
+    void 新写入记录使用v2_HMAC格式() {   // M-3：现行写入恒为带 "v2$" 前缀的 HMAC-SM3
+        auditService.record(10001L, "LOGIN", "AUTH", "alice", "1.1.1.1", "ua", "登录成功");
+        AuditLog last = auditLogMapper.selectOne(new LambdaQueryWrapper<AuditLog>()
+                .orderByDesc(AuditLog::getId).last("LIMIT 1"));
+        assertThat(last.getCurrentHash()).startsWith("v2$");
+    }
+
+    @Test
     @WithUserDetails("auditor")
     void verify接口_审计员可访问_返回valid() throws Exception {
         mvc.perform(get("/api/audit/verify"))

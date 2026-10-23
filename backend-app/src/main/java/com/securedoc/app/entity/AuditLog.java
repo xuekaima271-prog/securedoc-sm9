@@ -9,7 +9,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-/** audit_logs 审计日志。previousHash/currentHash 为 SM3 哈希链预留（Step8 增强，暂空）。 */
+/** audit_logs 审计日志。previousHash/currentHash 为哈希链：v2 起 currentHash 带 "v2$" 前缀（HMAC-SM3，M-3），无前缀为 v1 存量无钥 SM3。 */
 @Data
 @TableName("audit_logs")
 public class AuditLog {

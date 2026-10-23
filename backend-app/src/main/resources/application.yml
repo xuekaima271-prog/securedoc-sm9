@@ -72,3 +72,10 @@ app:
   upload:
     max-chunk-count: 10000        # M-2：单个文件分块数上限
     max-total-size: 2147483648    # M-2：单个文件声明总大小上限（字节）= 2GB
+  audit:
+    # M-3：审计哈希链 HMAC-SM3 密钥，仅服务端持有。此处默认值仅供本地 dev；prod 档在
+    # application-prod.yml 中覆盖为无兜底的 ${AUDIT_HMAC_KEY}，缺失环境变量即拒绝启动。
+    hmac-key: ${AUDIT_HMAC_KEY:dev-audit-hmac-key-change-me}
+    # M-3 存量兼容边界：id <= 此值的 v1 旧式哈希记录按原公式校验；升级既有库时由运维一次性
+    # 设为最后一条存量记录的 id（经 AUDIT_LEGACY_MAX_ID）。全新部署保持 0 = 不接受任何 v1 记录。
+    legacy-max-id: ${AUDIT_LEGACY_MAX_ID:0}

@@ -9,7 +9,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-/** login_attempts 登录失败聚合（每账号一行），用于账号锁定。MVP 无 Redis 的限流落库载体。 */
+/** login_attempts 登录失败聚合（每「账号×来源IP」一行，M-5），用于组合维度锁定。MVP 无 Redis 的限流落库载体。 */
 @Data
 @TableName("login_attempts")
 public class LoginAttempt {

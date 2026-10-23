@@ -16,7 +16,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Step 3.5 登录限流测试：账号锁定、成功重置、IP 维度限流(防账号锁定 DoS / DB-2)。
+ * Step 3.5 登录限流测试：(账号,IP) 组合锁定、成功重置、IP 维度限流(防账号锁定 DoS / DB-2)。
+ * M-5（2026-10-23）：锁定维度由账号全局改为组合维度，新增「异地锁死不影响常用来源」用例。
  * 每个用例前后 clearAll，避免限流状态跨用例/跨测试类污染。
  */
 @SpringBootTest
@@ -60,6 +61,19 @@ class LoginThrottleTests {
             login("carol", "wrong", "1.1.1.2").andExpect(status().isUnauthorized());
         }
         login("carol", "Demo@123", "1.1.1.2").andExpect(status().isOk());
+    }
+
+    @Test
+    void 攻击者从异地IP连错锁死该来源_账号从常用IP仍可登录() throws Exception {   // M-5 核心
+        for (int i = 0; i < 5; i++) {
+            login("carol", "wrong", "6.6.6.6").andExpect(status().isUnauthorized());
+        }
+        // 攻击来源已被组合锁定：即使口令正确也拒
+        login("carol", "Demo@123", "6.6.6.6")
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.code").value("RATE_LIMITED"));
+        // 但账号本身没有被全局锁死：从其他来源用正确口令可正常登录
+        login("carol", "Demo@123", "1.2.3.4").andExpect(status().isOk());
     }
 
     @Test
