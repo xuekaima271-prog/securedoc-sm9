@@ -1,0 +1,12 @@
+{
+  "title": "基于国密SM9的端到端加密文档投递系统",
+  "title_en": "Design and Implementation of an End-to-End Encrypted Document Delivery System Based on SM9",
+  "doc_type": "论文",
+  "college": "（学院名称待填）",
+  "major_class": "（专业班级待填）",
+  "student_name": "（姓名待填）",
+  "student_id": "（学号待填）",
+  "advisor": "（指导教师待填）",
+  "date": "二〇二六年五月",
+  "output": "thesis/build/毕业论文.docx"
+}
