@@ -15,7 +15,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 签发记录 Mapper 集成测试（H2）。验证 UUID 主键插入、issuedAt 自动填充、读回字段。
  * @Transactional 测试后回滚，不污染其他用例。
  */
-@SpringBootTest
+@SpringBootTest(properties = {
+        // 测试专用 keystore: 与 kgc-service/data/ 下的真实主密钥解耦——真实钥已轮换为随机口令
+        // (旧钥按已泄露处置), 测试不得依赖它, 更不得用仓库默认口令在 data/ 里再生一把。
+        "kgc.master-key.passphrase=test-only-kgc-master-passphrase",
+        "kgc.master-key.file=target/test-keystore/sm9-master.key"
+})
 @Transactional
 class KgcIssueMapperTest {
 

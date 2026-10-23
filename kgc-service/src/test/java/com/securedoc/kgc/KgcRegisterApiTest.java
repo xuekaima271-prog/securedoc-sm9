@@ -20,7 +20,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 身份登记接口 POST /kgc/sm9/register-identity（新用户开通）：
  * 登记→可签发（新用户闭环核心）、幂等、身份不可改写、内嵌 userId 校验、占用冲突、格式、令牌。
  */
-@SpringBootTest
+@SpringBootTest(properties = {
+        // 测试专用 keystore: 与 kgc-service/data/ 下的真实主密钥解耦——真实钥已轮换为随机口令
+        // (旧钥按已泄露处置), 测试不得依赖它, 更不得用仓库默认口令在 data/ 里再生一把。
+        "kgc.master-key.passphrase=test-only-kgc-master-passphrase",
+        "kgc.master-key.file=target/test-keystore/sm9-master.key"
+})
 @AutoConfigureMockMvc
 @Transactional
 class KgcRegisterApiTest {

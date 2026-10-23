@@ -31,7 +31,11 @@ kgc:
   # 服务间调用令牌（签发类接口校验，Step8）。生产用环境变量注入，切勿用默认值。
   service-token: ${KGC_SERVICE_TOKEN:dev-kgc-token-change-me}
   master-key:
-    # 主密钥落盘加密口令（PBKDF2 派生 → AES-GCM）。生产必须用环境变量，切勿用默认值。
+    # 主密钥落盘加密口令（PBKDF2 派生 → AES-GCM）。
+    # ⚠ 此默认值仅供本地 dev 档开箱演示: 它写在仓库里等于公开, 用它密封的主密钥按可解开对待。
+    #    prod 档(application-prod.yml)无默认回退, 必须注入环境变量 KGC_MASTER_PASSPHRASE, 缺失即拒绝启动。
+    # ⚠ 交付/打包卫生: 任何对外交付包必须剔除 kgc-service/data/ 与全部 *.key 文件
+    #    (.gitignore 已挡 git 跟踪, 但手工 zip 打包不会自动排除, 须人工核对)。
     passphrase: ${KGC_MASTER_PASSPHRASE:dev-kgc-master-passphrase-change-me}
     # 主密钥密文文件路径（相对运行目录 kgc-service/）
     file: ${KGC_MASTER_KEY_FILE:data/sm9-master.key}
