@@ -5,6 +5,7 @@ const routes = [
   { path: '/', redirect: '/inbox' },
   { path: '/login', component: () => import('./pages/Login.vue'), meta: { public: true } },
   { path: '/key-init', component: () => import('./pages/KeyInit.vue') },
+  { path: '/change-password', component: () => import('./pages/ChangePassword.vue') },
   { path: '/send', component: () => import('./pages/Send.vue') },
   { path: '/inbox', component: () => import('./pages/Inbox.vue') },
   { path: '/decrypt/:fileId', component: () => import('./pages/Decrypt.vue') },

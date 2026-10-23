@@ -4,6 +4,7 @@ export const authApi = {
   login: (username, password) => http.post('/api/auth/login', { username, password }),
   me: () => http.get('/api/auth/me'),
   logout: () => http.post('/api/auth/logout'),
+  changePassword: (oldPassword, newPassword) => http.post('/api/auth/change-password', { oldPassword, newPassword }),
 };
 
 export const keysApi = {

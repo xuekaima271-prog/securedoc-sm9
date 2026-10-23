@@ -214,8 +214,8 @@ CREATE TABLE audit_logs (
     client_ip     VARCHAR(45),
     user_agent    VARCHAR(255),
     detail        TEXT,                                 -- 详情(JSON/文本)
-    previous_hash VARCHAR(128),                         -- 上一条日志哈希(SM3，哈希链)
-    current_hash  VARCHAR(128),                         -- 当前日志哈希 = SM3(previous_hash || log_content)
+    previous_hash VARCHAR(128),                         -- 上一条日志哈希(哈希链衔接，逐字存上一条 current_hash)
+    current_hash  VARCHAR(128),                         -- 当前日志哈希：v2="v2$"+Base64(HMAC-SM3(服务端密钥, previous_hash || log_content))；无前缀=v1 存量无钥 SM3(M-3)
     created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 );
@@ -225,20 +225,22 @@ CREATE INDEX idx_audit_action  ON audit_logs (action);
 
 
 -- =============================================================================
--- login_attempts —— 登录失败聚合与限流（每账号一行）
+-- login_attempts —— 登录失败聚合与限流（每「账号×来源IP」一行，M-5）
 -- MVP 无 Redis：登录限流/锁定由本表 + 应用内缓存实现
+-- M-5：锁定维度由账号全局改为 (username, client_ip) 组合——攻击者轮换 IP 只能锁住
+--   自己的来源，无法再把账号（含管理员）对所有来源全局锁死；代价见 LoginThrottleService 类注释。
 -- =============================================================================
 CREATE TABLE login_attempts (
     id             BIGINT      NOT NULL AUTO_INCREMENT,
-    username       VARCHAR(64) NOT NULL,               -- 唯一：按账号聚合失败计数
-    client_ip      VARCHAR(45),                         -- 最近一次失败来源IP
-    fail_count     INT         NOT NULL DEFAULT 0,      -- 连续失败次数
-    locked_until   DATETIME,                            -- 锁定截止时间(空=未锁)
+    username       VARCHAR(64) NOT NULL,               -- 账号（与 client_ip 组合唯一）
+    client_ip      VARCHAR(45) NOT NULL,               -- 失败来源IP（组合维度的一部分）
+    fail_count     INT         NOT NULL DEFAULT 0,      -- 该组合的连续失败次数
+    locked_until   DATETIME,                            -- 该组合的锁定截止时间(空=未锁)
     last_failed_at DATETIME,                            -- 最近失败时间
     created_at     DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at     DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    CONSTRAINT uk_login_username UNIQUE (username)
+    CONSTRAINT uk_login_user_ip UNIQUE (username, client_ip)
 );
 CREATE INDEX idx_login_username ON login_attempts (username);
 
